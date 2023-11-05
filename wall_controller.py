@@ -33,8 +33,9 @@ def update_data(port):
 
 
 # we define a new function that will get the data from LiDAR and publish it
-def main():
+async def main():
     drone = System()
+    await drone.connect(system_address="serial:///dev/pixhawk")
     print("Waiting for drone to connect...")
     async for state in drone.core.connection_state():
         if state.is_connected:
@@ -79,7 +80,7 @@ if __name__ == "__main__":
             ser_left.open()
         if not ser_right.isOpen():
             ser_right.open()
-        main()
+        asyncio.run(main())
     except KeyboardInterrupt(): # ctrl + c in terminal.
         if ser_left is not None:
             ser_left.close()
