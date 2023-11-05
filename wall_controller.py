@@ -9,11 +9,11 @@ from simple_pid import PID
 # ser = serial.Serial("/dev/ttyUSB1", 115200)
 
 ser_left = serial.Serial("/dev/ttyAMA0", 115200)
-ser_right = serial.Serial("/dev/ttyAMA0", 115200)
+ser_right = serial.Serial("/dev/ttyAMA1", 115200)
 # ser = serial.Serial("COM12", 115200)
 
 YAW_CTRL_P = 1
-DST_CTRL_P = 0.01
+DST_CTRL_P = 0.001
 
 
 def update_data(port):
@@ -27,10 +27,8 @@ def update_data(port):
         strength = bytes_serial[4] + bytes_serial[5] * 256
         temperature = bytes_serial[6] + bytes_serial[7] * 256
         temperature = (temperature / 8) - 256
-        print("Distance:" + str(distance))
-        print("Strength:" + str(strength))
-        if temperature != 0:
-            print("Temperature:" + str(temperature))
+ #       print("Distance:" + str(distance))
+  #      print("Strength:" + str(strength))
         port.reset_input_buffer()
     return distance
 
@@ -40,7 +38,7 @@ def main():
     distance_left = None
     distance_right = None
     yaw_pid_controller = PID(YAW_CTRL_P, 0, 0, output_limits=(-1, 1))
-    distance_pid_controller = PID(DST_CTRL_P, 0, 0, output_limits=(-0.1, 0.1))
+    distance_pid_controller = PID(DST_CTRL_P, 0, 0, output_limits=(-0.1, 0.1), setpoint=80)
     while True:
         counter_l = ser_left.in_waiting  # count the number of bytes of the serial port
         counter_r = ser_right.in_waiting
@@ -53,13 +51,16 @@ def main():
             if res is not None:
                 distance_right = res
         if distance_left is None or distance_right is None:
+            print("Got none distance")
             continue
         angle_rad, wall_dist = compute_wall_angle(distance_left, distance_right, np.pi/2)
         angle_rad -= np.pi / 2
-        print(np.rad2deg(angle_rad))
+        #print(np.rad2deg(angle_rad))
+        print("wall_dist", str(wall_dist), "angle", str(np.rad2deg(angle_rad)))
         control_effort_yaw = yaw_pid_controller(angle_rad)
-        control_effort_dist = distance_pid_controller(wall_dist)
+        control_effort_dist = -distance_pid_controller(wall_dist)
         print("Yaw effort:", control_effort_yaw, "Dist effort:", control_effort_dist)
+        time.sleep(0.1)
 
 
 if __name__ == "__main__":
