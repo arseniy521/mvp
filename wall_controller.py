@@ -1,16 +1,15 @@
+#!/usr/bin/env python3
 import serial
 import time  # Optional (required if using time.sleep() below)
 from compute_angle import compute_wall_angle
 import numpy as np
 from simple_pid import PID
-
-# Checked with TFmini plus
-
-# ser = serial.Serial("/dev/ttyUSB1", 115200)
+import asyncio
+from mavsdk import System
+from mavsdk.offboard import (OffboardError, VelocityBodyYawspeed, Attitude, AttitudeRate, PositionNedYaw)
 
 ser_left = serial.Serial("/dev/ttyAMA0", 115200)
 ser_right = serial.Serial("/dev/ttyAMA1", 115200)
-# ser = serial.Serial("COM12", 115200)
 
 YAW_CTRL_P = 1
 DST_CTRL_P = 0.001
@@ -27,14 +26,20 @@ def update_data(port):
         strength = bytes_serial[4] + bytes_serial[5] * 256
         temperature = bytes_serial[6] + bytes_serial[7] * 256
         temperature = (temperature / 8) - 256
- #       print("Distance:" + str(distance))
-  #      print("Strength:" + str(strength))
+        # print("Distance:" + str(distance))
+        # print("Strength:" + str(strength))
         port.reset_input_buffer()
     return distance
 
 
 # we define a new function that will get the data from LiDAR and publish it
 def main():
+    drone = System()
+    print("Waiting for drone to connect...")
+    async for state in drone.core.connection_state():
+        if state.is_connected:
+            print(f"-- Connected to drone!")
+            break
     distance_left = None
     distance_right = None
     yaw_pid_controller = PID(YAW_CTRL_P, 0, 0, output_limits=(-1, 1))
@@ -53,6 +58,9 @@ def main():
         if distance_left is None or distance_right is None:
             print("Got none distance")
             continue
+        if 10 > distance_left > 200 or 10 > distance_right > 200:
+            print("Readings out of min/max range")
+            continue
         angle_rad, wall_dist = compute_wall_angle(distance_left, distance_right, np.pi/2)
         angle_rad -= np.pi / 2
         #print(np.rad2deg(angle_rad))
@@ -60,6 +68,8 @@ def main():
         control_effort_yaw = yaw_pid_controller(angle_rad)
         control_effort_dist = -distance_pid_controller(wall_dist)
         print("Yaw effort:", control_effort_yaw, "Dist effort:", control_effort_dist)
+        await drone.offboard.set_velocity_body(
+            VelocityBodyYawspeed(control_effort_dist, 0.0, 0.0, control_effort_yaw))
         time.sleep(0.1)
 
 
