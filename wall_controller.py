@@ -41,6 +41,25 @@ async def main():
         if state.is_connected:
             print(f"-- Connected to drone!")
             break
+
+    print("-- Arming")
+    await drone.action.arm()
+
+    print("-- Setting initial setpoint")
+    await drone.offboard.set_velocity_body(
+        VelocityBodyYawspeed(0.0, 0.0, 0.0, 0.0))
+
+    print("-- Starting offboard")
+    try:
+        await drone.offboard.start()
+    except OffboardError as error:
+        print(f"Starting offboard mode failed with error code: \
+                      {error._result.result}")
+        print("-- Disarming")
+        await drone.action.disarm()
+        return
+
+
     distance_left = None
     distance_right = None
     yaw_pid_controller = PID(YAW_CTRL_P, 0, 0, output_limits=(-1, 1))
