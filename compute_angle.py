@@ -35,8 +35,10 @@ def compute_wall_angle(left_side, right_side, sensors_angle):
 
 
 if __name__ == '__main__':
-    angle_rad, _ = compute_wall_angle(3, 3, np.pi/2)
+    angle_rad, _ = compute_wall_angle(3, 6, np.pi/4)
+
     angle_rad -= np.pi/2
+    print(np.rad2deg(angle_rad))
  #   yaw_pid_controller = PID(1, 0, 0, output_limits=(-1, 1))
   #  control_effort = yaw_pid_controller(angle_rad)
 

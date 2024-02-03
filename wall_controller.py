@@ -83,7 +83,7 @@ async def main():
             print("Readings out of min/max range")
             break
             # continue
-        angle_rad, wall_dist = compute_wall_angle(distance_left, distance_right, np.pi/2)
+        angle_rad, wall_dist = compute_wall_angle(distance_left, distance_right, np.pi/4)
         angle_rad -= np.pi / 2
         #print(np.rad2deg(angle_rad))
         print("wall_dist", str(wall_dist), "angle", str(np.rad2deg(angle_rad)))
