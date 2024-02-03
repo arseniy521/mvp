@@ -41,7 +41,7 @@ async def main():
         if state.is_connected:
             print(f"-- Connected to drone!")
             break
-
+    """
     print("-- Arming")
     await drone.action.arm()
 
@@ -59,7 +59,7 @@ async def main():
         await drone.action.disarm()
         return
 
-
+    """
     distance_left = None
     distance_right = None
     yaw_pid_controller = PID(YAW_CTRL_P, 0, 0, output_limits=(-1, 1))
