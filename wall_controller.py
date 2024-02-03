@@ -42,8 +42,8 @@ async def main():
             print(f"-- Connected to drone!")
             break
 
-    print("-- Arming")
-    await drone.action.arm()
+    # print("-- Arming")
+    # await drone.action.arm()
 
     print("-- Setting initial setpoint")
     await drone.offboard.set_velocity_body(
@@ -55,8 +55,8 @@ async def main():
     except OffboardError as error:
         print(f"Starting offboard mode failed with error code: \
                       {error._result.result}")
-        print("-- Disarming")
-        await drone.action.disarm()
+        # print("-- Disarming")
+        # await drone.action.disarm()
         return
 
 
@@ -77,10 +77,12 @@ async def main():
                 distance_right = res
         if distance_left is None or distance_right is None:
             print("Got none distance")
-            continue
+            break
+            # continue
         if 10 > distance_left > 200 or 10 > distance_right > 200:
             print("Readings out of min/max range")
-            continue
+            break
+            # continue
         angle_rad, wall_dist = compute_wall_angle(distance_left, distance_right, np.pi/2)
         angle_rad -= np.pi / 2
         #print(np.rad2deg(angle_rad))
@@ -91,6 +93,13 @@ async def main():
         await drone.offboard.set_velocity_body(
             VelocityBodyYawspeed(control_effort_dist, 0.0, 0.0, control_effort_yaw))
         time.sleep(0.1)
+
+    print("-- Stopping offboard")
+    try:
+        await drone.offboard.stop()
+    except OffboardError as error:
+        print(f"Stopping offboard mode failed with error code: \
+                      {error._result.result}")
 
 
 if __name__ == "__main__":
