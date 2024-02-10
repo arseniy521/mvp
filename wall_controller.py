@@ -11,7 +11,7 @@ from mavsdk.offboard import (OffboardError, VelocityBodyYawspeed, Attitude, Atti
 ser_left = serial.Serial("/dev/ttyAMA0", 115200)
 ser_right = serial.Serial("/dev/ttyAMA1", 115200)
 
-YAW_CTRL_P = 1
+YAW_CTRL_P = 0.5
 DST_CTRL_P = 0.1
 
 
@@ -85,9 +85,10 @@ async def main():
             # continue
         angle_rad, wall_dist = compute_wall_angle(distance_left, distance_right, np.pi/4)
         angle_rad -= np.pi / 2
+        angle_deg = np.rad2deg(angle_rad)
         #print(np.rad2deg(angle_rad))
-        print("wall_dist", str(wall_dist), "angle", str(np.rad2deg(angle_rad)))
-        control_effort_yaw = yaw_pid_controller(angle_rad)
+        print("wall_dist", str(wall_dist), "angle", str(angle_deg))
+        control_effort_yaw = yaw_pid_controller(angle_deg)
         control_effort_dist = -distance_pid_controller(wall_dist)
         print("Yaw effort:", control_effort_yaw, "Dist effort:", control_effort_dist)
         await drone.offboard.set_velocity_body(
