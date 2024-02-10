@@ -12,7 +12,7 @@ ser_left = serial.Serial("/dev/ttyAMA0", 115200)
 ser_right = serial.Serial("/dev/ttyAMA1", 115200)
 
 YAW_CTRL_P = 1
-DST_CTRL_P = 0.001
+DST_CTRL_P = 0.1
 
 
 def update_data(port):
